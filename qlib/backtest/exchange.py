@@ -698,13 +698,16 @@ class Exchange:
                 not self.check_stock_suspended(stock_id=stock_id, start_time=start_time, end_time=end_time)
                 and not self.check_stock_limit(stock_id=stock_id, start_time=start_time, end_time=end_time)
             ):
+                deal_price = self.get_deal_price(
+                    stock_id=stock_id,
+                    start_time=start_time,
+                    end_time=end_time,
+                    direction=direction,
+                )
+                if deal_price is None:
+                    continue
                 value += (
-                    self.get_deal_price(
-                        stock_id=stock_id,
-                        start_time=start_time,
-                        end_time=end_time,
-                        direction=direction,
-                    )
+                    deal_price
                     * amount_dict[stock_id]
                 )
         return value
