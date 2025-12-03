@@ -81,19 +81,38 @@ def get_calendar_list(bench_code="CSI300") -> List[pd.Timestamp]:
         else:
             if bench_code.upper() == "ALL":
 
-                @deco_retry
+                # @deco_retry
+                # def _get_calendar_from_month(month):
+                #     _cal = []
+                #     try:
+                #         resp = requests.get(
+                #             SZSE_CALENDAR_URL.format(month=month, random=random.random), timeout=None
+                #         ).json()
+                #         for _r in resp["data"]:
+                #             if int(_r["jybz"]):
+                #                 _cal.append(pd.Timestamp(_r["jyrq"]))
+                #     except Exception as e:
+                #         raise ValueError(f"{month}-->{e}") from e
+                #     return _cal
+                
                 def _get_calendar_from_month(month):
-                    _cal = []
-                    try:
-                        resp = requests.get(
-                            SZSE_CALENDAR_URL.format(month=month, random=random.random), timeout=None
-                        ).json()
-                        for _r in resp["data"]:
-                            if int(_r["jybz"]):
-                                _cal.append(pd.Timestamp(_r["jyrq"]))
-                    except Exception as e:
-                        raise ValueError(f"{month}-->{e}") from e
-                    return _cal
+                    from qlight.config import ROOTDIR
+                    import pandas as pd
+
+                    # Load SH000300 historical data
+                    sh300df = pd.read_csv(
+                        f"{ROOTDIR}/investment_data/qlib/qlib_source/SH000300.csv",
+                        sep=",",
+                        index_col=0,
+                    )
+
+                    # Month is like "2005-01"
+                    # Filter all dates that start with that month
+                    mask = sh300df.index.to_series().astype(str).str.startswith(month)
+                    dates = sh300df.index[mask]
+
+                    # Convert to list of pandas.Timestamp
+                    return [pd.Timestamp(d) for d in dates]
 
                 month_range = pd.date_range(start="2000-01", end=pd.Timestamp.now() + pd.Timedelta(days=31), freq="M")
                 calendar = []
